@@ -6,6 +6,7 @@
     <title>AW Client Report Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -123,16 +124,16 @@
                                 <div class="liability-row" data-index="0">
                                     <div class="form-row liability-fields">
                                         <div class="form-group form-group-sm">
-                                            <label class="label">Name</label>
-                                            <input class="input" type="text" name="liability_name_0" value="Mortgage" placeholder="e.g. Mortgage">
+                                            <label class="label" for="liability_name_0">Name</label>
+                                            <input class="input" type="text" id="liability_name_0" name="liability_name_0" value="Mortgage" placeholder="e.g. Mortgage">
                                         </div>
                                         <div class="form-group form-group-sm">
-                                            <label class="label">Balance ($)</label>
-                                            <input class="input liability-balance" type="number" name="liability_balance_0" value="200000" step="0.01">
+                                            <label class="label" for="liability_balance_0">Balance ($)</label>
+                                            <input class="input liability-balance" type="number" id="liability_balance_0" name="liability_balance_0" value="200000" step="0.01">
                                         </div>
                                         <div class="form-group form-group-sm">
-                                            <label class="label">Rate (%)</label>
-                                            <input class="input" type="number" name="liability_rate_0" value="3.5" step="0.01">
+                                            <label class="label" for="liability_rate_0">Rate (%)</label>
+                                            <input class="input" type="number" id="liability_rate_0" name="liability_rate_0" value="3.5" step="0.01">
                                         </div>
                                         <button type="button" class="btn-icon btn-remove-liability" title="Remove" data-index="0">&times;</button>
                                     </div>
@@ -140,16 +141,16 @@
                                 <div class="liability-row" data-index="1">
                                     <div class="form-row liability-fields">
                                         <div class="form-group form-group-sm">
-                                            <label class="label">Name</label>
-                                            <input class="input" type="text" name="liability_name_1" value="Auto Loan" placeholder="e.g. Auto Loan">
+                                            <label class="label" for="liability_name_1">Name</label>
+                                            <input class="input" type="text" id="liability_name_1" name="liability_name_1" value="Auto Loan" placeholder="e.g. Auto Loan">
                                         </div>
                                         <div class="form-group form-group-sm">
-                                            <label class="label">Balance ($)</label>
-                                            <input class="input liability-balance" type="number" name="liability_balance_1" value="18000" step="0.01">
+                                            <label class="label" for="liability_balance_1">Balance ($)</label>
+                                            <input class="input liability-balance" type="number" id="liability_balance_1" name="liability_balance_1" value="18000" step="0.01">
                                         </div>
                                         <div class="form-group form-group-sm">
-                                            <label class="label">Rate (%)</label>
-                                            <input class="input" type="number" name="liability_rate_1" value="4.9" step="0.01">
+                                            <label class="label" for="liability_rate_1">Rate (%)</label>
+                                            <input class="input" type="number" id="liability_rate_1" name="liability_rate_1" value="4.9" step="0.01">
                                         </div>
                                         <button type="button" class="btn-icon btn-remove-liability" title="Remove" data-index="1">&times;</button>
                                     </div>
@@ -620,16 +621,16 @@
             div.innerHTML =
                 '<div class="form-row liability-fields">' +
                     '<div class="form-group form-group-sm">' +
-                        '<label class="label">Name</label>' +
-                        '<input class="input" type="text" name="liability_name_' + liabilityIndex + '" placeholder="e.g. Credit Card">' +
+                        '<label class="label" for="liability_name_' + liabilityIndex + '">Name</label>' +
+                        '<input class="input" type="text" id="liability_name_' + liabilityIndex + '" name="liability_name_' + liabilityIndex + '" placeholder="e.g. Credit Card">' +
                     '</div>' +
                     '<div class="form-group form-group-sm">' +
-                        '<label class="label">Balance ($)</label>' +
-                        '<input class="input liability-balance" type="number" name="liability_balance_' + liabilityIndex + '" step="0.01">' +
+                        '<label class="label" for="liability_balance_' + liabilityIndex + '">Balance ($)</label>' +
+                        '<input class="input liability-balance" type="number" id="liability_balance_' + liabilityIndex + '" name="liability_balance_' + liabilityIndex + '" step="0.01">' +
                     '</div>' +
                     '<div class="form-group form-group-sm">' +
-                        '<label class="label">Rate (%)</label>' +
-                        '<input class="input" type="number" name="liability_rate_' + liabilityIndex + '" step="0.01">' +
+                        '<label class="label" for="liability_rate_' + liabilityIndex + '">Rate (%)</label>' +
+                        '<input class="input" type="number" id="liability_rate_' + liabilityIndex + '" name="liability_rate_' + liabilityIndex + '" step="0.01">' +
                     '</div>' +
                     '<button type="button" class="btn-icon btn-remove-liability" title="Remove" data-index="' + liabilityIndex + '">&times;</button>' +
                 '</div>';

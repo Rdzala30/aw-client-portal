@@ -178,257 +178,178 @@ def calculate_report_data(data: Dict[str, Any]) -> Dict[str, Any]:
 # A4 landscape dimensions: 841.89 x 595.28 pt
 # ======================================================================
 
-def _sacs_draw_page_border(c: canvas.Canvas) -> None:
-    """2pt navy border inset 5pt from page edges (A4 landscape)."""
-    pw, ph = landscape(A4)  # 841.89 x 595.28
-    c.setStrokeColor(NAVY)
-    c.setLineWidth(2)
-    c.rect(5, 5, pw - 10, ph - 10)
 
-
-def _sacs_draw_header(c: canvas.Canvas, data: dict) -> None:
-    """Full-width navy header bar at the top of the page (55pt tall)."""
-    pw, ph = landscape(A4)
-
-    c.setFillColor(NAVY)
-    c.rect(0, ph - 55, pw, 55, fill=True, stroke=False)
-
-    # Header text (y = ph - 38, centered 17pt above bar bottom)
-    c.setFillColor(white)
-    c.setFont("Helvetica-Bold", 11)
-    c.drawString(40, ph - 38, "Windbrook Solutions")
-
-    c.setFont("Helvetica", 11)
-    c.drawString(190, ph - 38, "|")
-
-    c.setFont("Helvetica-Bold", 11)
-    c.drawString(205, ph - 38, "SACS Report")
-
-    c.setFont("Helvetica", 11)
-    c.drawString(310, ph - 38, "|")
-
-    c.setFont("Helvetica", 11)
-    c.drawString(325, ph - 38, data.get("client_name", "N/A"))
-
-    c.setFont("Helvetica", 10)
-    c.drawRightString(pw - 40, ph - 38, data.get("report_date", "N/A"))
-
-
-def _sacs_draw_flow_boxes(c: canvas.Canvas, data: dict) -> dict:
+def generate_sacs_pdf(data, output):
     """
-    Draw three colored flow boxes and return edge coordinates for arrows.
-
-    All boxes vertically centered at y=320, each 140pt tall.
-    """
-    inflow = data.get("inflow", 0)
-    outflow = data.get("outflow", 0)
-    private_balance = data.get("private_reserve_balance", 0)
-    private_target = data.get("private_reserve_target", 0)
-
-    box_height = 140
-    box_y = 250  # bottom of all boxes
-
-    # ── LEFT BOX (Green — Inflow) ──────────────────────────────
-    left_x, left_width = 60, 200
-
-    c.setFillColor(GREEN)
-    c.roundRect(left_x, box_y, left_width, box_height, 12, fill=True, stroke=False)
-
-    c.setFillColor(white)
-    c.setFont("Helvetica-Bold", 16)
-    c.drawCentredString(left_x + left_width / 2, box_y + 80, "INFLOW")
-    c.setFont("Helvetica", 13)
-    c.drawCentredString(left_x + left_width / 2, box_y + 50, f"{_fmt(inflow)}/mo")
-
-    # ── MIDDLE BOX (Red — Outflow) ─────────────────────────────
-    mid_x, mid_width = 320, 200
-
-    c.setFillColor(RED)
-    c.roundRect(mid_x, box_y, mid_width, box_height, 12, fill=True, stroke=False)
-
-    c.setFillColor(white)
-    c.setFont("Helvetica-Bold", 16)
-    c.drawCentredString(mid_x + mid_width / 2, box_y + 80, "OUTFLOW")
-    c.setFont("Helvetica", 13)
-    c.drawCentredString(mid_x + mid_width / 2, box_y + 50, f"{_fmt(outflow)}/mo")
-
-    # ── RIGHT BOX (Blue — Private Reserve) ─────────────────────
-    right_x, right_width = 580, 220
-
-    c.setFillColor(BLUE)
-    c.roundRect(right_x, box_y, right_width, box_height, 12, fill=True, stroke=False)
-
-    c.setFillColor(white)
-    c.setFont("Helvetica-Bold", 13)
-    c.drawCentredString(right_x + right_width / 2, box_y + 85, "PRIVATE RESERVE")
-    c.setFont("Helvetica", 11)
-    c.drawCentredString(right_x + right_width / 2, box_y + 60, f"Balance: {_fmt(private_balance)}")
-    c.drawCentredString(right_x + right_width / 2, box_y + 38, f"Target: {_fmt(private_target)}")
-
-    center_y = box_y + box_height / 2  # y=320
-    return {
-        "left": {
-            "left_x": left_x, "right_x": left_x + left_width,
-            "center_y": center_y, "top_y": box_y + box_height, "bottom_y": box_y,
-        },
-        "middle": {
-            "left_x": mid_x, "right_x": mid_x + mid_width,
-            "center_y": center_y, "top_y": box_y + box_height, "bottom_y": box_y,
-        },
-        "right": {
-            "left_x": right_x, "right_x": right_x + right_width,
-            "center_y": center_y, "top_y": box_y + box_height, "bottom_y": box_y,
-        },
-    }
-
-
-def _sacs_draw_arrows(c: canvas.Canvas, data: dict, boxes: dict) -> None:
-    """
-    Draw arrows between flow boxes.
-
-    Arrow 1 (solid black): LEFT box -> MIDDLE box (expenses flow)
-    Arrow 2 (dashed blue): LEFT box -> RIGHT box (excess, arcs above middle)
-    """
-    outflow = data.get("outflow", 0)
-    excess = data.get("excess", 0)
-    arrow_size = 10
-
-    left_right = boxes["left"]["right_x"]    # x=260
-    mid_left = boxes["middle"]["left_x"]     # x=320
-    center_y = boxes["left"]["center_y"]     # y=320
-
-    # Arrow 1: Solid black line LEFT -> MIDDLE
-    c.setStrokeColor(black)
-    c.setLineWidth(1.5)
-    c.setDash()
-    line_end_x = mid_left - arrow_size
-    c.line(left_right, center_y, line_end_x, center_y)
-    c.line(mid_left, center_y, mid_left - arrow_size, center_y + 6)
-    c.line(mid_left, center_y, mid_left - arrow_size, center_y - 6)
-
-    # Label: outflow amount
-    label_x = (left_right + mid_left) / 2  # ~290
-    c.setFillColor(DARK_TEXT)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawCentredString(label_x, center_y + 18, f"{_fmt(outflow)}")
-    c.setFillColor(RED)
-    c.setFont("Helvetica-Bold", 8)
-    c.drawCentredString(label_x, center_y - 14, "\u2716  \u2192 Expenses")
-
-    # Arrow 2: Dashed blue line LEFT -> RIGHT (above middle box)
-    right_left = boxes["right"]["left_x"]    # x=580
-    dashed_y = boxes["left"]["top_y"] + 50   # y=440 (increased gap from boxes)
-
-    c.setStrokeColor(BLUE)
-    c.setLineWidth(1.5)
-    c.setDash(5, 3)
-    c.line(left_right + 5, dashed_y, right_left - 5, dashed_y)
-    c.setDash()
-    c.line(right_left - 5, dashed_y, right_left - 5 - arrow_size, dashed_y + 6)
-    c.line(right_left - 5, dashed_y, right_left - 5 - arrow_size, dashed_y - 6)
-    c.line(left_right + 5, dashed_y, left_right + 5 + arrow_size, dashed_y + 6)
-    c.line(left_right + 5, dashed_y, left_right + 5 + arrow_size, dashed_y - 6)
-
-    # Excess label
-    excess_label_x = (left_right + right_left) / 2  # ~420
-    c.setFillColor(BLUE)
-    c.setFont("Helvetica-Bold", 11)
-    c.drawCentredString(excess_label_x, dashed_y + 16, f"Excess: {_fmt(excess)}/mo")
-    c.setFont("Helvetica", 8)
-    c.drawCentredString(excess_label_x, dashed_y - 30, "(Flows to Private Reserve)")
-
-
-def _sacs_draw_summary_row(c: canvas.Canvas, data: dict) -> None:
-    """
-    Summary row below the boxes showing savings rate and reserve status.
-    """
-    inflow = data.get("inflow", 0)
-    outflow = data.get("outflow", 0)
-    excess = data.get("excess", 0)
-    balance = data.get("private_reserve_balance", 0)
-    target = data.get("private_reserve_target", 0)
-    pw, _ph = landscape(A4)
-
-    savings_rate = (excess / inflow * 100) if inflow > 0 else 0
-    annual_excess = excess * 12
-    on_track = balance >= target
-
-    # Background strip
-    strip_y = 175
-    strip_height = 55
-    c.setFillColor(LIGHT_BG)
-    c.rect(40, strip_y, pw - 80, strip_height, fill=True, stroke=False)
-
-    c.setStrokeColor(DIVIDER)
-    c.setLineWidth(0.5)
-    c.line(40, strip_y + strip_height, pw - 40, strip_y + strip_height)
-
-    label_y = strip_y + 36
-    value_y = strip_y + 18
-
-    # Savings Rate
-    c.setFillColor(DARK_TEXT)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(60, label_y, "Monthly Savings Rate")
-    c.setFont("Helvetica-Bold", 14)
-    c.setFillColor(GREEN if savings_rate >= 0 else RED)
-    c.drawString(60, value_y, f"{savings_rate:.1f}%")
-
-    # Annual Excess
-    c.setFillColor(DARK_TEXT)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawCentredString(pw / 2 - 40, label_y, "Annual Excess")
-    c.setFont("Helvetica-Bold", 14)
-    c.setFillColor(GREEN if annual_excess >= 0 else RED)
-    c.drawCentredString(pw / 2 - 40, value_y, f"{_fmt(annual_excess)}")
-
-    # Reserve Status
-    c.setFillColor(DARK_TEXT)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawRightString(pw - 60, label_y, "Private Reserve Status")
-    c.setFont("Helvetica-Bold", 13)
-    if on_track:
-        c.setFillColor(GREEN)
-        c.drawRightString(pw - 60, value_y, "\u2705 On Track")
-    else:
-        c.setFillColor(RED)
-        c.drawRightString(pw - 60, value_y, "\u26A0\uFE0F Below Target")
-
-
-def _sacs_draw_footer(c: canvas.Canvas, data: dict) -> None:
-    """Navy footer bar at the bottom of the page (y=0 to y=35)."""
-    pw, _ph = landscape(A4)
-
-    c.setFillColor(NAVY)
-    c.rect(0, 0, pw, 35, fill=True, stroke=False)
-
-    c.setFillColor(white)
-    c.setFont("Helvetica", 9)
-    c.drawString(40, 12, "Confidential")
-    c.drawCentredString(pw / 2, 12, "Windbrook Solutions")
-    c.drawRightString(pw - 40, 12, data.get("report_date", "N/A"))
-
-
-def generate_sacs_pdf(data: dict, output: Union[str, io.BytesIO]) -> None:
-    """
-    Generate a one-page A4 landscape SACS cashflow diagram PDF.
+    Generate a professional SACS (Simple Automated Cash Flow System) PDF
+    using ReportLab canvas API.
 
     Parameters
     ----------
     data : dict
         Must contain: client_name, report_date, inflow, outflow, excess,
-        private_reserve_balance, private_reserve_target.
+        private_reserve_balance, private_reserve_target,
+        insurance_deductibles, monthly_expenses.
     output : str | io.BytesIO
-        File path or BytesIO buffer. ReportLab Canvas accepts both.
+        File path or BytesIO buffer.
     """
+    W, H = landscape(A4)  # 841.89 x 595.28
+    PW, PH = W, H
+
+    client_name = data.get("client_name", "")
+    report_date = data.get("report_date", "")
+    inflow = data.get("inflow", 0)
+    outflow = data.get("outflow", 0)
+    excess = data.get("excess", 0)
+    pr_balance = data.get("private_reserve_balance", 0)
+    pr_target = data.get("private_reserve_target", 0)
+
     c = canvas.Canvas(output, pagesize=landscape(A4))
 
-    _sacs_draw_page_border(c)
-    _sacs_draw_header(c, data)
-    boxes = _sacs_draw_flow_boxes(c, data)
-    _sacs_draw_arrows(c, data, boxes)
-    _sacs_draw_summary_row(c, data)
-    _sacs_draw_footer(c, data)
+    # ================================================================
+    # ELEMENT 1: OUTER PAGE BORDER
+    # ================================================================
+    c.setStrokeColor(NAVY)
+    c.setLineWidth(2)
+    c.rect(10, 10, PW - 20, PH - 20, stroke=1, fill=0)
+
+    # ================================================================
+    # ELEMENT 2: HEADER BAR (y=PH-46 to y=PH)
+    # ================================================================
+    c.setFillColor(NAVY)
+    c.rect(10, PH - 46, PW - 20, 46, stroke=0, fill=1)
+    draw_text(c, "WINDBROOK SOLUTIONS", 30, PH - 33, "Helvetica-Bold", 13, white)
+    draw_text(c, "SACS \u2014 Cash Flow Analysis", PW / 2, PH - 33, "Helvetica", 10, white, "center")
+    draw_text(c, f"{client_name}  |  {report_date}", PW - 30, PH - 33, "Helvetica", 10, white, "right")
+
+    # ================================================================
+    # ELEMENT 3: THREE FLOW BOXES
+    # ================================================================
+    box_h = 140
+    box_y = 270  # bottom of boxes
+    gap = 30
+    box_w = 215
+
+    # Layout: three boxes evenly spaced
+    total_content_w = 3 * box_w + 2 * gap
+    start_x = (PW - total_content_w) / 2
+
+    left_x = start_x
+    mid_x = start_x + box_w + gap
+    right_x = start_x + 2 * (box_w + gap)
+
+    # ── INFLOW BOX (GREEN) ─────────────────────────────────────
+    draw_rounded_box(c, left_x, box_y, box_w, box_h, 12, GREEN)
+    draw_text(c, "INFLOW", left_x + box_w / 2, box_y + 95,
+              "Helvetica-Bold", 18, white, "center")
+    draw_text(c, f"{fmt(inflow)}/mo", left_x + box_w / 2, box_y + 65,
+              "Helvetica", 14, white, "center")
+    draw_text(c, "Monthly Income", left_x + box_w / 2, box_y + 18,
+              "Helvetica-Oblique", 9, white, "center")
+
+    # ── OUTFLOW BOX (RED) ──────────────────────────────────────
+    draw_rounded_box(c, mid_x, box_y, box_w, box_h, 12, RED)
+    draw_text(c, "OUTFLOW", mid_x + box_w / 2, box_y + 95,
+              "Helvetica-Bold", 18, white, "center")
+    draw_text(c, f"{fmt(outflow)}/mo", mid_x + box_w / 2, box_y + 65,
+              "Helvetica", 14, white, "center")
+    draw_text(c, "Monthly Expenses", mid_x + box_w / 2, box_y + 18,
+              "Helvetica-Oblique", 9, white, "center")
+
+    # ── PRIVATE RESERVE BOX (BLUE) ─────────────────────────────
+    draw_rounded_box(c, right_x, box_y, box_w, box_h, 12, BLUE)
+    draw_text(c, "PRIVATE RESERVE", right_x + box_w / 2, box_y + 100,
+              "Helvetica-Bold", 13, white, "center")
+    draw_text(c, f"Balance: {fmt(pr_balance)}", right_x + box_w / 2, box_y + 72,
+              "Helvetica", 11, white, "center")
+    draw_text(c, f"Target: {fmt(pr_target)}", right_x + box_w / 2, box_y + 52,
+              "Helvetica", 11, white, "center")
+    draw_text(c, "Emergency Fund", right_x + box_w / 2, box_y + 18,
+              "Helvetica-Oblique", 9, white, "center")
+
+    # ── ARROW 1: Inflow -> Outflow (solid) ─────────────────────
+    center_y = box_y + box_h / 2
+    arrow_size = 8
+
+    c.setStrokeColor(DARK_TEXT)
+    c.setLineWidth(1.5)
+    c.setDash()
+    # Horizontal line
+    c.line(left_x + box_w, center_y, mid_x - arrow_size - 5, center_y)
+    # Arrowhead
+    c.line(mid_x - 5, center_y, mid_x - arrow_size - 5, center_y + 5)
+    c.line(mid_x - 5, center_y, mid_x - arrow_size - 5, center_y - 5)
+
+    # Arrow label
+    draw_text(c, f"{fmt(outflow)}", (left_x + box_w + mid_x) / 2, center_y + 14,
+              "Helvetica-Bold", 9, DARK_TEXT, "center")
+    draw_text(c, "\u2192 Expenses", (left_x + box_w + mid_x) / 2, center_y - 14,
+              "Helvetica-Bold", 8, RED, "center")
+
+    # ── ARROW 2: Inflow -> Private Reserve (dashed, above) ────
+    dashed_y = box_y + box_h + 30
+    c.setStrokeColor(BLUE)
+    c.setLineWidth(1.5)
+    c.setDash(6, 4)
+    c.line(left_x + box_w, dashed_y, right_x - arrow_size - 5, dashed_y)
+    c.setDash()
+    c.line(right_x - 5, dashed_y, right_x - arrow_size - 5, dashed_y + 5)
+    c.line(right_x - 5, dashed_y, right_x - arrow_size - 5, dashed_y - 5)
+    c.line(left_x + box_w, dashed_y, left_x + box_w + arrow_size + 5, dashed_y + 5)
+    c.line(left_x + box_w, dashed_y, left_x + box_w + arrow_size + 5, dashed_y - 5)
+
+    # Arrow labels
+    savings_rate = (excess / inflow * 100) if inflow > 0 else 0
+    annual_excess = excess * 12
+    draw_text(c, f"Excess: {fmt(excess)}/mo", PW / 2, dashed_y + 18,
+              "Helvetica-Bold", 12, BLUE, "center")
+    draw_text(c, "(Flows to Private Reserve)", PW / 2, dashed_y - 18,
+              "Helvetica", 8, GRAY, "center")
+
+    # ================================================================
+    # ELEMENT 4: METRICS SUMMARY GRID
+    # ================================================================
+    strip_y = 130
+    strip_h = 80
+    on_track = pr_balance >= pr_target
+
+    # Background strip
+    c.setFillColor(LIGHT_BG)
+    c.rect(30, strip_y, PW - 60, strip_h, fill=True, stroke=False)
+
+    # Top border line
+    c.setStrokeColor(DIVIDER)
+    c.setLineWidth(0.5)
+    c.line(30, strip_y + strip_h, PW - 30, strip_y + strip_h)
+
+    # Four metric columns
+    metrics = [
+        ("Monthly Savings Rate", f"{savings_rate:.1f}%", GREEN if savings_rate >= 0 else RED),
+        ("Annual Excess", fmt(annual_excess), GREEN if annual_excess >= 0 else RED),
+        ("Reserve Target", fmt(pr_target), DARK_TEXT),
+        ("Reserve Status", "On Track" if on_track else "Below Target", GREEN if on_track else RED),
+    ]
+
+    n_metrics = len(metrics)
+    col_w = (PW - 100) / n_metrics
+
+    for i, (label, value, color) in enumerate(metrics):
+        col_mid = 50 + col_w * i + col_w / 2
+        draw_text(c, label, col_mid, strip_y + 58, "Helvetica-Bold", 8, DARK_TEXT, "center")
+        draw_text(c, value, col_mid, strip_y + 32, "Helvetica-Bold", 16, color, "center")
+
+    # ================================================================
+    # ELEMENT 5: FOOTER (y=10 to y=68)
+    # ================================================================
+    c.setStrokeColor(GRAY_BOX)
+    c.setLineWidth(0.5)
+    c.line(30, 65, PW - 30, 65)
+
+    today_str = date.today().strftime("%B %d, %Y")
+
+    draw_text(c, "CONFIDENTIAL \u2014 For Client Use Only", 30, 48, "Helvetica", 8, GRAY)
+    draw_text(c, "Windbrook Solutions | AW Client Report Portal", PW / 2, 48, "Helvetica", 8, GRAY, "center")
+    draw_text(c, f"Generated: {today_str}", PW - 30, 48, "Helvetica", 8, GRAY, "right")
 
     c.showPage()
     c.save()
@@ -501,7 +422,7 @@ def draw_account_row(c, account, row_x, row_y, row_w, row_h, idx):
               "Helvetica-Bold", 12, BLUE, align="right")
 
 
-def draw_total_box(c, label, amount, x, y, w, bg_color=NAVY, text_color=WHITE):
+def draw_total_box(c, label, amount, x, y, w, bg_color=NAVY, text_color=white):
     """Draw a colored total box with label on left, amount on right."""
     draw_rounded_box(c, x, y, w, 28, radius=0, fill_color=bg_color)
     draw_text(c, label, x + 10, y + 8, "Helvetica-Bold", 10, text_color)

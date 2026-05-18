@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AW Client Report Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="app">
+        <!-- ===== Header ===== -->
+        <header class="header">
+            <div class="container">
+                <div class="header-brand">
+                    <div class="header-logo">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                            <rect width="32" height="32" rx="8" fill="#1a56db"/>
+                            <path d="M16 8v16M8 16h16" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="header-title">AW Client Report Portal</h1>
+                        <p class="header-subtitle">Financial Planning & Wealth Management</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="layout">
+                <!-- ===== Left Column — Input Form ===== -->
+                <section class="card input-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Client Financial Data</h2>
+                        <p class="card-desc">Enter quarterly financial information below.</p>
+                    </div>
+
+                    <form id="financialForm" class="form">
+                        <!-- Client Info -->
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Client Information</legend>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="label" for="client_name">Client Name</label>
+                                    <input class="input" type="text" id="client_name" value="John & Jane Doe" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="report_date">Report Period</label>
+                                    <input class="input" type="text" id="report_date" value="Q2 2026" required>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- SACS — Cash Flow -->
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Cash Flow (SACS)</legend>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="label" for="inflow">Total Monthly Inflow ($)</label>
+                                    <input class="input" type="number" id="inflow" value="15000" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="outflow">Total Monthly Outflow ($)</label>
+                                    <input class="input" type="number" id="outflow" value="11000" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="label" for="monthly_expenses">Monthly Expenses ($)</label>
+                                    <input class="input" type="number" id="monthly_expenses" value="11000" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="insurance_deductibles">Insurance Deductibles ($)</label>
+                                    <input class="input" type="number" id="insurance_deductibles" value="2500" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="label" for="private_reserve_balance">Private Reserve Balance ($)</label>
+                                    <input class="input" type="number" id="private_reserve_balance" value="50000" step="0.01" placeholder="e.g. 50000">
+                                </div>
+                                <div class="form-group"></div>
+                            </div>
+                        </fieldset>
+
+                        <!-- TCC — Retirement & Investments -->
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Retirement &amp; Investments (TCC)</legend>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="label" for="client1_retirement">Client 1 Retirement Accounts
+                                        <span class="hint">(comma-separated)</span>
+                                    </label>
+                                    <input class="input" type="text" id="client1_retirement" value="10000, 25000" placeholder="e.g. 10000, 25000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="client2_retirement">Client 2 Retirement Accounts
+                                        <span class="hint">(comma-separated)</span>
+                                    </label>
+                                    <input class="input" type="text" id="client2_retirement" value="15000" placeholder="e.g. 15000">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="label" for="non_retirement">Non-Retirement Accounts
+                                        <span class="hint">(comma-separated)</span>
+                                    </label>
+                                    <input class="input" type="text" id="non_retirement" value="50000, 30000" placeholder="e.g. 50000, 30000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="label" for="trust_value">Trust Value ($)</label>
+                                    <input class="input" type="number" id="trust_value" value="450000" step="0.01">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Liabilities -->
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Liabilities</legend>
+                            <div id="liabilitiesContainer">
+                                <div class="liability-row" data-index="0">
+                                    <div class="form-row liability-fields">
+                                        <div class="form-group form-group-sm">
+                                            <label class="label">Name</label>
+                                            <input class="input" type="text" name="liability_name_0" value="Mortgage" placeholder="e.g. Mortgage">
+                                        </div>
+                                        <div class="form-group form-group-sm">
+                                            <label class="label">Balance ($)</label>
+                                            <input class="input liability-balance" type="number" name="liability_balance_0" value="200000" step="0.01">
+                                        </div>
+                                        <div class="form-group form-group-sm">
+                                            <label class="label">Rate (%)</label>
+                                            <input class="input" type="number" name="liability_rate_0" value="3.5" step="0.01">
+                                        </div>
+                                        <button type="button" class="btn-icon btn-remove-liability" title="Remove" data-index="0">&times;</button>
+                                    </div>
+                                </div>
+                                <div class="liability-row" data-index="1">
+                                    <div class="form-row liability-fields">
+                                        <div class="form-group form-group-sm">
+                                            <label class="label">Name</label>
+                                            <input class="input" type="text" name="liability_name_1" value="Auto Loan" placeholder="e.g. Auto Loan">
+                                        </div>
+                                        <div class="form-group form-group-sm">
+                                            <label class="label">Balance ($)</label>
+                                            <input class="input liability-balance" type="number" name="liability_balance_1" value="18000" step="0.01">
+                                        </div>
+                                        <div class="form-group form-group-sm">
+                                            <label class="label">Rate (%)</label>
+                                            <input class="input" type="number" name="liability_rate_1" value="4.9" step="0.01">
+                                        </div>
+                                        <button type="button" class="btn-icon btn-remove-liability" title="Remove" data-index="1">&times;</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" id="addLiabilityBtn">
+                                + Add Liability
+                            </button>
+                        </fieldset>
+
+                        <!-- Action Buttons -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" id="previewBtn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                Preview Calculations
+                            </button>
+                            <button type="button" class="btn btn-accent" id="pdfBtnFront">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                Download PDF Report
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- ===== Right Column — Live Summary ===== -->
+                <section class="card results-card" id="resultsSection">
+                    <div class="card-header">
+                        <h2 class="card-title">Live Summary</h2>
+                        <p class="card-desc">Values update instantly as you type in the form.</p>
+                    </div>
+
+                    <div class="results-content" id="summaryPanel">
+                        <!-- SACS Summary -->
+                        <div class="result-section">
+                            <div class="result-section-header">
+                                <h3 class="result-section-title">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                    SACS — Cash Flow
+                                </h3>
+                                <span class="badge badge-sacs">Live</span>
+                            </div>
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <span class="metric-label">Excess Cash Flow</span>
+                                    <span class="metric-value" id="summary-excess">$4,000.00</span>
+                                    <span class="metric-desc">Inflow &minus; Outflow</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span class="metric-label">Private Reserve Target</span>
+                                    <span class="metric-value" id="summary-prt">$68,500.00</span>
+                                    <span class="metric-desc">(6 &times; Expenses) + Deductibles</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TCC Summary -->
+                        <div class="result-section">
+                            <div class="result-section-header">
+                                <h3 class="result-section-title">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                    TCC — Net Worth
+                                </h3>
+                                <span class="badge badge-tcc">Live</span>
+                            </div>
+                            <div class="metrics-grid metrics-grid-3">
+                                <div class="metric-card">
+                                    <span class="metric-label">Client 1 Retirement</span>
+                                    <span class="metric-value" id="summary-c1-ret">$35,000.00</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span class="metric-label">Client 2 Retirement</span>
+                                    <span class="metric-value" id="summary-c2-ret">$15,000.00</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span class="metric-label">Non-Retirement Total</span>
+                                    <span class="metric-value" id="summary-non-ret">$80,000.00</span>
+                                    <span class="metric-desc">Excludes trust</span>
+                                </div>
+                            </div>
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <span class="metric-label">Trust Value</span>
+                                    <span class="metric-value" id="summary-trust">$450,000.00</span>
+                                </div>
+                                <div class="metric-card">
+                                    <span class="metric-label">Liabilities Total</span>
+                                    <span class="metric-value" id="summary-liabilities">$218,000.00</span>
+                                    <span class="metric-desc">Displayed separately</span>
+                                </div>
+                            </div>
+                            <div class="metrics-row">
+                                <div class="metric-card metric-card-lg metric-highlight">
+                                    <span class="metric-label">Grand Total Net Worth</span>
+                                    <span class="metric-value metric-value-xl" id="summary-grand-total">$580,000.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="result-actions">
+                            <button type="button" class="btn btn-primary" id="previewBtnResults">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                Preview Calculations
+                            </button>
+                            <button type="button" class="btn btn-accent" id="pdfBtnSummary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                Download PDF Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading Spinner -->
+                    <div class="loading hidden" id="loadingSpinner">
+                        <div class="spinner"></div>
+                        <p>Calculating...</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- ===== Footer ===== -->
+        <footer class="footer">
+            <div class="container">
+                <p>AW Client Report Portal &mdash; Demo Application</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+    // ====================================================================
+    // AW Client Report Portal — Live Calculation Engine
+    //
+    // Uses event delegation: ONE 'input' listener on the form.
+    // All summary values update instantly as the user types.
+    // ====================================================================
+
+    (function () {
+        'use strict';
+
+        var form = document.getElementById('financialForm');
+        if (!form) return;  // Guard: form must exist
+
+        var addLiabilityBtn = document.getElementById('addLiabilityBtn');
+        var loadingSpinner = document.getElementById('loadingSpinner');
+
+        // ── formatCurrency(amount) ────────────────────────────────────
+        // Format a number as US currency: $1,234.56
+        function formatCurrency(amount) {
+            if (isNaN(amount) || amount === null || amount === undefined) {
+                amount = 0;
+            }
+            return '$' + Number(amount)
+                .toFixed(2)
+                .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // ── calculateSACS() ──────────────────────────────────────────
+        // SACS = Simple Automated Cash Flow System
+        // Formulas:
+        //   excess_cashflow   = inflow - outflow
+        //   private_reserve_target = (6 * outflow) + insurance_deductibles
+        function calculateSACS() {
+            // Read raw values (treat empty / NaN as 0)
+            var inflow = parseFloat(document.getElementById('inflow').value) || 0;
+            var outflow = parseFloat(document.getElementById('outflow').value) || 0;
+            var insuranceDeductibles = parseFloat(document.getElementById('insurance_deductibles').value) || 0;
+
+            // excess_cashflow = inflow - outflow
+            var excess = inflow - outflow;
+
+            // private_reserve_target = (6 * monthly_expenses) + insurance_deductibles
+            var monthlyExpenses = parseFloat(document.getElementById('monthly_expenses').value) || 0;
+            var prt = (6 * monthlyExpenses) + insuranceDeductibles;
+
+            return {
+                excess: excess,
+                privateReserveTarget: prt
+            };
+        }
+
+        // ── calculateTCC() ───────────────────────────────────────────
+        // TCC = Total Client Chart (Net Worth)
+        // Formulas:
+        //   client1_retirement_total = sum of client1_retirement_accounts
+        //   client2_retirement_total = sum of client2_retirement_accounts
+        //   non_retirement_total     = sum of non_retirement_accounts (excludes trust)
+        //   grand_total_net_worth    = client1 + client2 + non_retirement + trust_value
+        //   liabilities_total        = sum of all .liability-balance inputs
+        function calculateTCC() {
+            // Helper: parse comma-separated text input to sum of numbers
+            function sumCommaList(id) {
+                var val = document.getElementById(id).value;
+                if (!val) return 0;
+                return val.split(',')
+                    .map(function (s) { return parseFloat(s.trim()); })
+                    .filter(function (n) { return !isNaN(n); })
+                    .reduce(function (a, b) { return a + b; }, 0);
+            }
+
+            // Client 1 Retirement Total (sum of comma-separated values)
+            var c1Ret = sumCommaList('client1_retirement');
+
+            // Client 2 Retirement Total (sum of comma-separated values)
+            var c2Ret = sumCommaList('client2_retirement');
+
+            // Non-Retirement Total (sum of comma-separated values — trust NOT included)
+            var nonRet = sumCommaList('non_retirement');
+
+            // Trust Value
+            var trust = parseFloat(document.getElementById('trust_value').value) || 0;
+
+            // Grand Total Net Worth = Client1 + Client2 + NonRetirement + Trust
+            // Liabilities are NOT subtracted — shown separately
+            var grandTotal = c1Ret + c2Ret + nonRet + trust;
+
+            // Liabilities Total: sum of all inputs with class "liability-balance"
+            var liabilitiesTotal = 0;
+            var balanceInputs = document.querySelectorAll('.liability-balance');
+            balanceInputs.forEach(function (input) {
+                var val = parseFloat(input.value) || 0;
+                liabilitiesTotal += val;
+            });
+
+            return {
+                client1RetirementTotal: c1Ret,
+                client2RetirementTotal: c2Ret,
+                nonRetirementTotal: nonRet,
+                trustValue: trust,
+                grandTotalNetWorth: grandTotal,
+                liabilitiesTotal: liabilitiesTotal
+            };
+        }
+
+        // ── updateSummary() ──────────────────────────────────────────
+        // Reads all form fields, runs SACS + TCC, updates the summary panel.
+        function updateSummary() {
+            var sacs = calculateSACS();
+            var tcc = calculateTCC();
+
+            // -- SACS display --
+            var excessEl = document.getElementById('summary-excess');
+            excessEl.textContent = formatCurrency(sacs.excess);
+
+            // Color-code excess: green (#27ae60) if >= 0, red (#e74c3c) if < 0
+            if (sacs.excess >= 0) {
+                excessEl.style.color = '#27ae60';
+            } else {
+                excessEl.style.color = '#e74c3c';
+            }
+
+            document.getElementById('summary-prt').textContent = formatCurrency(sacs.privateReserveTarget);
+
+            // -- TCC display --
+            document.getElementById('summary-c1-ret').textContent = formatCurrency(tcc.client1RetirementTotal);
+            document.getElementById('summary-c2-ret').textContent = formatCurrency(tcc.client2RetirementTotal);
+            document.getElementById('summary-non-ret').textContent = formatCurrency(tcc.nonRetirementTotal);
+            document.getElementById('summary-trust').textContent = formatCurrency(tcc.trustValue);
+            document.getElementById('summary-grand-total').textContent = formatCurrency(tcc.grandTotalNetWorth);
+            document.getElementById('summary-liabilities').textContent = formatCurrency(tcc.liabilitiesTotal);
+        }
+
+        // ── collectFormData() ────────────────────────────────────────
+        // Gathers ALL form fields into a JavaScript object ready to POST.
+        function collectFormData() {
+            // Parse comma-separated list strings into arrays of numbers
+            function parseList(val) {
+                if (!val) return [];
+                return String(val).split(',')
+                    .map(function (s) { return parseFloat(s.trim()); })
+                    .filter(function (n) { return !isNaN(n); });
+            }
+
+            // Gather liabilities from dynamic rows
+            var liabilities = [];
+            document.querySelectorAll('.liability-row').forEach(function (row) {
+                var idx = row.dataset.index;
+                var nameInput = row.querySelector('[name="liability_name_' + idx + '"]');
+                var balanceInput = row.querySelector('[name="liability_balance_' + idx + '"]');
+                var rateInput = row.querySelector('[name="liability_rate_' + idx + '"]');
+
+                var name = nameInput ? nameInput.value : '';
+                var balance = balanceInput ? (parseFloat(balanceInput.value) || 0) : 0;
+                var rate = rateInput ? (parseFloat(rateInput.value) || 0) : 0;
+
+                if (name) {
+                    liabilities.push({ name: name, balance: balance, rate: rate });
+                }
+            });
+
+            return {
+                client_name: document.getElementById('client_name').value || '',
+                report_date: document.getElementById('report_date').value || '',
+                inflow: parseFloat(document.getElementById('inflow').value) || 0,
+                outflow: parseFloat(document.getElementById('outflow').value) || 0,
+                monthly_expenses: parseFloat(document.getElementById('monthly_expenses').value) || 0,
+                insurance_deductibles: parseFloat(document.getElementById('insurance_deductibles').value) || 0,
+                private_reserve_balance: parseFloat(document.getElementById('private_reserve_balance').value) || 0,
+                client1_retirement_accounts: parseList(document.getElementById('client1_retirement').value),
+                client2_retirement_accounts: parseList(document.getElementById('client2_retirement').value),
+                non_retirement_accounts: parseList(document.getElementById('non_retirement').value),
+                trust_value: parseFloat(document.getElementById('trust_value').value) || 0,
+                liabilities: liabilities
+            };
+        }
+
+        // ── previewCalculations() ────────────────────────────────────
+        // POSTs to /calculate, shows result in an alert.
+        async function previewCalculations() {
+            var payload = collectFormData();
+
+            // Show loading
+            if (loadingSpinner) loadingSpinner.classList.remove('hidden');
+
+            try {
+                var res = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    throw new Error('Server responded with ' + res.status);
+                }
+
+                var data = await res.json();
+
+                // Show a formatted summary in an alert
+                var msg = '=== Server Calculation Results ===\n\n';
+                msg += 'Client: ' + (data.client_name || '—') + '\n';
+                msg += 'Period: ' + (data.report_date || '—') + '\n\n';
+                msg += '-- SACS (Cash Flow) --\n';
+                msg += 'Excess: ' + formatCurrency(data.sacs_excess || 0) + '\n';
+                msg += 'Private Reserve Target: ' + formatCurrency(data.sacs_private_reserve_target || 0) + '\n\n';
+                msg += '-- TCC (Net Worth) --\n';
+                msg += 'Client 1 Retirement: ' + formatCurrency(data.tcc_client1_retirement_total || 0) + '\n';
+                msg += 'Client 2 Retirement: ' + formatCurrency(data.tcc_client2_retirement_total || 0) + '\n';
+                msg += 'Non-Retirement Total: ' + formatCurrency(data.tcc_non_retirement_total || 0) + '\n';
+                msg += 'Grand Total Net Worth: ' + formatCurrency(data.tcc_grand_total_net_worth || 0) + '\n';
+                msg += 'Liabilities Total: ' + formatCurrency(data.tcc_liabilities_total || 0) + '\n\n';
+                msg += '(Check browser console for full API response)';
+
+                alert(msg);
+                console.log('Server response:', data);
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+                console.error('Preview error:', err);
+            } finally {
+                if (loadingSpinner) loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        // ── generatePDF() ────────────────────────────────────────────
+        // Validates required fields, POSTs to /generate-pdf, downloads the file.
+        // Shows loading state on the triggering button during fetch.
+        // Handles JSON error responses from the server.
+        async function generatePDF(btn) {
+            if (!btn) btn = this;
+
+            var payload = collectFormData();
+
+            // ── Validate required fields ──────────────────────────────
+            if (!payload.client_name || !payload.client_name.trim()) {
+                alert('Please enter a client name before generating the PDF.');
+                return;
+            }
+            if (!payload.inflow || payload.inflow <= 0) {
+                alert('Please enter a valid monthly inflow amount before generating the PDF.');
+                return;
+            }
+            if (!payload.outflow || payload.outflow <= 0) {
+                alert('Please enter a valid monthly outflow amount before generating the PDF.');
+                return;
+            }
+
+            // ── Show loading state ──────────────────────────────────
+            var originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '\u23F3 Generating PDF...';
+
+            try {
+                var res = await fetch('/generate-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    // Try to parse JSON error from server
+                    var errorMsg = 'Server responded with ' + res.status;
+                    try {
+                        var errData = await res.json();
+                        if (errData.error) {
+                            errorMsg = errData.error;
+                        }
+                    } catch (_) {}
+                    throw new Error(errorMsg);
+                }
+
+                // ── Trigger download ─────────────────────────────────
+                var blob = await res.blob();
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+
+                // Determine filename from Content-Disposition or fallback
+                var fileName = 'client_report.pdf';
+                var disposition = res.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('filename=') >= 0) {
+                    var parts = disposition.split('filename=');
+                    if (parts.length > 1) {
+                        fileName = parts[1].replace(/"/g, '').trim();
+                    }
+                }
+                a.download = fileName;
+
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // ── Success message ──────────────────────────────────
+                alert('\u2705 PDF Report downloaded successfully!');
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+                console.error('PDF generation error:', err);
+            } finally {
+                // ── Always restore button ────────────────────────────
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+
+        // ================================================================
+        // Event Binding
+        // ================================================================
+
+        // ── Event Delegation: ONE 'input' listener on the form ─────────
+        // Catches changes on all input fields, including dynamically added ones.
+        form.addEventListener('input', function (e) {
+            // Ignore buttons / non-input elements
+            if (e.target.tagName !== 'INPUT') return;
+            updateSummary();
+        });
+
+        // ── "Preview Calculations" buttons ────────────────────────────
+        document.getElementById('previewBtn').addEventListener('click', previewCalculations);
+        document.getElementById('previewBtnResults').addEventListener('click', previewCalculations);
+
+        // ── "Download PDF Report" buttons ─────────────────────────────
+        document.getElementById('pdfBtnFront').addEventListener('click', function () {
+            generatePDF(this);
+        });
+        document.getElementById('pdfBtnSummary').addEventListener('click', function () {
+            generatePDF(this);
+        });
+
+        // ── Add / Remove Liability Rows ───────────────────────────────
+        var liabilityIndex = 2;
+
+        addLiabilityBtn.addEventListener('click', function () {
+            var container = document.getElementById('liabilitiesContainer');
+            var div = document.createElement('div');
+            div.className = 'liability-row';
+            div.dataset.index = liabilityIndex;
+            div.innerHTML =
+                '<div class="form-row liability-fields">' +
+                    '<div class="form-group form-group-sm">' +
+                        '<label class="label">Name</label>' +
+                        '<input class="input" type="text" name="liability_name_' + liabilityIndex + '" placeholder="e.g. Credit Card">' +
+                    '</div>' +
+                    '<div class="form-group form-group-sm">' +
+                        '<label class="label">Balance ($)</label>' +
+                        '<input class="input liability-balance" type="number" name="liability_balance_' + liabilityIndex + '" step="0.01">' +
+                    '</div>' +
+                    '<div class="form-group form-group-sm">' +
+                        '<label class="label">Rate (%)</label>' +
+                        '<input class="input" type="number" name="liability_rate_' + liabilityIndex + '" step="0.01">' +
+                    '</div>' +
+                    '<button type="button" class="btn-icon btn-remove-liability" title="Remove" data-index="' + liabilityIndex + '">&times;</button>' +
+                '</div>';
+            container.appendChild(div);
+            liabilityIndex++;
+        });
+
+        // Remove liability rows (event delegation on the container)
+        document.getElementById('liabilitiesContainer').addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn-remove-liability')) {
+                var row = e.target.closest('.liability-row');
+                if (row) row.remove();
+                updateSummary();  // Recalculate after removal
+            }
+        });
+
+        // ── Initial calculation on page load ──────────────────────────
+        updateSummary();
+
+    })();
+    </script>
+</body>
+</html>

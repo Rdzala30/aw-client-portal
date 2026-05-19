@@ -529,7 +529,9 @@ def generate_tcc_pdf(data, output):
     col_x1, col_w1 = 30, 255
 
     draw_rounded_box(c, col_x1, 728 - col_header_h, col_w1, col_header_h, 0, GRAY_BOX)
-    draw_text(c, f"{client1_name} \u2014 Retirement", col_x1 + 8, 728 - col_header_h + 4,
+    # Client 1 column header — use first name only to avoid overflow
+    c1_display = client1_name.split()[0] if client1_name else "Client 1"
+    draw_text(c, f"{c1_display} \u2014 Retirement Accounts", col_x1 + 8, 728 - col_header_h + 4,
               "Helvetica-Bold", 9, NAVY)
 
     y = 728 - col_header_h - row_gap
@@ -550,7 +552,9 @@ def generate_tcc_pdf(data, output):
     col_x2, col_w2 = 307, 255
 
     draw_rounded_box(c, col_x2, 728 - col_header_h, col_w2, col_header_h, 0, GRAY_BOX)
-    draw_text(c, f"{client2_name} \u2014 Retirement", col_x2 + 8, 728 - col_header_h + 4,
+    # Client 2 column header
+    c2_display = client2_name.split()[0] if client2_name else "Client 2"
+    draw_text(c, f"{c2_display} \u2014 Retirement Accounts", col_x2 + 8, 728 - col_header_h + 4,
               "Helvetica-Bold", 9, NAVY)
 
     y = 728 - col_header_h - row_gap
@@ -655,7 +659,10 @@ def generate_tcc_pdf(data, output):
     c.setFillColor(NAVY)
     c.rect(10, 105, 575.27, 35, stroke=0, fill=1)
 
-    col_labels = ["C1 Retirement", "C2 Retirement", "Non-Retirement", "Trust"]
+    # Use actual individual names in summary bar (truncate if too long)
+    c1_label = client1_name.split()[0] + " Ret."   # e.g. "John Ret."
+    c2_label = client2_name.split()[0] + " Ret."   # e.g. "Jane Ret."
+    col_labels = [c1_label, c2_label, "Non-Retirement", "Trust"]
     col_values = [fmt_short(c1_total), fmt_short(c2_total), fmt_short(nr_total), fmt_short(trust_value)]
     col_w_summary = 575.27 / 4
 
@@ -730,6 +737,37 @@ if __name__ == "__main__":
 # Data Mapping Helpers
 # ======================================================================
 
+def _split_couple_name(full_name: str):
+    """
+    Split a couple name into two individual names.
+
+    Examples:
+      "John & Jane Doe"   → ("John Doe",  "Jane Doe")
+      "John & Jane"       → ("John",      "Jane")
+      "John Doe"          → ("John Doe",  "")
+      "John"              → ("John",      "")
+    """
+    if " & " in full_name:
+        parts = full_name.split(" & ", 1)
+        left  = parts[0].strip()   # e.g. "John"
+        right = parts[1].strip()   # e.g. "Jane Doe"
+
+        right_words = right.split()
+        if len(right_words) > 1:
+            # right already has a last name → take it for left too if left has none
+            last_name = right_words[-1]
+            left_words = left.split()
+            if len(left_words) == 1:
+                left = f"{left} {last_name}"   # "John" → "John Doe"
+            return left, right
+        else:
+            # right is just a first name, no shared last name
+            return left, right
+    else:
+        # no " & " → treat as single name
+        return full_name.strip(), ""
+
+
 def _build_sacs_data(raw_data: dict, calculated: dict) -> dict:
     """Map raw + calculated data into generate_sacs_pdf input format."""
     return {
@@ -746,11 +784,12 @@ def _build_sacs_data(raw_data: dict, calculated: dict) -> dict:
 
 
 def _build_tcc_data(raw_data: dict, calculated: dict) -> dict:
-    """Map raw + calculated data into generate_tcc_pdf input format (flat keys)."""
+    """Map raw + calculated data into generate_tcc_pdf input format."""
+
     c1_accts = raw_data.get("client1_retirement_accounts") or []
     c2_accts = raw_data.get("client2_retirement_accounts") or []
-    nr_accts = raw_data.get("non_retirement_accounts") or []
-    liabilities = raw_data.get("liabilities") or []
+    nr_accts  = raw_data.get("non_retirement_accounts")    or []
+    liabilities = raw_data.get("liabilities")              or []
 
     def _to_accts(numbers, prefix="Account"):
         return [
@@ -758,32 +797,55 @@ def _build_tcc_data(raw_data: dict, calculated: dict) -> dict:
             for i, val in enumerate(numbers)
         ]
 
-    client1_name = raw_data.get("client1_name", calculated.get("client_name", "Client 1"))
-    client2_name = raw_data.get("client2_name", "Client 2")
+    # ── Resolve individual client names ──────────────────────────────
+    full_couple_name = calculated.get("client_name", "")
 
-    c1_total = calculated.get("tcc_client1_retirement_total", 0)
-    c2_total = calculated.get("tcc_client2_retirement_total", 0)
-    nr_total = calculated.get("tcc_non_retirement_total", 0)
-    liab_total = calculated.get("tcc_liabilities_total", 0)
-    trust_val = calculated.get("trust_value", 0)
-    grand_total = calculated.get("tcc_grand_total_net_worth", 0)
+    # If the form sends explicit individual names → use them.
+    # Otherwise → auto-split the couple name (e.g. "John & Jane Doe").
+    raw_c1 = (raw_data.get("client1_name") or "").strip()
+    raw_c2 = (raw_data.get("client2_name") or "").strip()
+
+    if raw_c1 and raw_c2:
+        client1_name = raw_c1
+        client2_name = raw_c2
+    elif raw_c1:
+        _, client2_name = _split_couple_name(full_couple_name)
+        client1_name = raw_c1
+    else:
+        client1_name, client2_name = _split_couple_name(full_couple_name)
+        # Final fallbacks if split produces empty strings
+        if not client1_name:
+            client1_name = "Client 1"
+        if not client2_name:
+            client2_name = "Client 2"
+
+    # ── Pull totals from calculated dict ─────────────────────────────
+    c1_total    = calculated.get("tcc_client1_retirement_total", 0)
+    c2_total    = calculated.get("tcc_client2_retirement_total", 0)
+    nr_total    = calculated.get("tcc_non_retirement_total",     0)
+    liab_total  = calculated.get("tcc_liabilities_total",        0)
+    trust_val   = calculated.get("trust_value",                  0)
+    grand_total = calculated.get("tcc_grand_total_net_worth",    0)
 
     return {
-        "client_name": calculated.get("client_name", ""),
+        "client_name":  full_couple_name,
         "client1_name": client1_name,
         "client2_name": client2_name,
-        "report_date": calculated.get("report_date", ""),
+        "report_date":  calculated.get("report_date", ""),
+
         "client1_retirement_accounts": _to_accts(c1_accts),
         "client2_retirement_accounts": _to_accts(c2_accts),
-        "non_retirement_accounts": _to_accts(nr_accts),
-        "trust_value": trust_val,
-        "trust_address": "",  # not available from simplified form
-        "liabilities": liabilities,
+        "non_retirement_accounts":     _to_accts(nr_accts),
+
+        "trust_value":   trust_val,
+        "trust_address": raw_data.get("trust_address", ""),
+        "liabilities":   liabilities,
+
         "client1_retirement_total": c1_total,
         "client2_retirement_total": c2_total,
-        "non_retirement_total": nr_total,
-        "liabilities_total": liab_total,
-        "grand_total_net_worth": grand_total,
+        "non_retirement_total":     nr_total,
+        "liabilities_total":        liab_total,
+        "grand_total_net_worth":    grand_total,
     }
 
 
